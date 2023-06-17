@@ -235,6 +235,7 @@ void backProp(class *selfp) { // one iteration of backpropagation, sets the self
             // the weights and biases lists 0th index is empty, reflecting how there are more layers of nodes than layers of weights and biases.
             // self.weight[i][j][k] is encoded to self.gradient[i][j * (self.nodesPerLayer[i - 1] + 1) + k], which is a connection from self.nodes[i - 1][j] to self.nodes[i][k]
             // self.bias[i][j] is encoded to self.gradient[i][(j + 1) * (self.nodesPerLayer[i - 1] + 1) - 1], which is the bias for self.node[i][j]
+            
         }
         if (i != 1) {
             list_t *lastLayer2 = list_init();
@@ -242,8 +243,9 @@ void backProp(class *selfp) { // one iteration of backpropagation, sets the self
             list_clear(lastLayer); // setup lastLayer for next backprop iteration (only happens layers - 2 times)
             for (int j = 0; j < lengthLayer; j++) {
                 double acc = 0;
+                double derivActivate = DERIV_ACTIVATION_FUNCTION(((list_t*) (self.weightedSums -> data[i].p)) -> data[j].d);
                 for (int k = 0; k < lengthPrevLayer; k++) {
-                    acc += ((list_t*) (((list_t*) (self.weights -> data[i].p)) -> data[j].p)) -> data[k].d * DERIV_ACTIVATION_FUNCTION(((list_t*) (self.weightedSums -> data[i].p)) -> data[j].d) * lastLayer2 -> data[k].d;
+                    acc += ((list_t*) (((list_t*) (self.weights -> data[i].p)) -> data[j].p)) -> data[k].d * derivActivate * lastLayer2 -> data[j].d;
                 }
                 list_append(lastLayer, (unitype) acc, 'd');
             }
