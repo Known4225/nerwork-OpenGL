@@ -60,10 +60,10 @@ void nerworkInit(class *selfp) { // initialise values
 void process(class *selfp) { // calculates neural network result given layer 1 nodes have been set
     class self = *selfp;
     for (int i = 1; i < self.layers; i++) {
-        for (int j = 0; j < ((list_t*) (self.nodes -> data[i].p)) -> length; j++) {
+        for (int j = 0; j < self.nodesPerLayer -> data[i].i; j++) {
             double acc = 0;
-            for (int k = 0; k < ((list_t*) (self.nodes -> data[i - 1].p)) -> length; k++) {
-                acc += (((list_t*) (((list_t*) (self.weights -> data[i - 1].p)) -> data[k].p)) -> data[j].d) * (((list_t*) (self.nodes -> data[i - 1].p)) -> data[k].d); // calculate weighted sum
+            for (int k = 0; k < self.nodesPerLayer -> data[i - 1].i; k++) {
+                acc += (((list_t*) (((list_t*) (self.weights -> data[i].p)) -> data[j].p)) -> data[k].d) * (((list_t*) (self.nodes -> data[i - 1].p)) -> data[k].d); // calculate weighted sum
             }
             acc += ((list_t*) (self.biases -> data[i].p)) -> data[j].d;
             ((list_t*) (self.weightedSums -> data[i].p)) -> data[j] = (unitype) acc;
@@ -72,18 +72,18 @@ void process(class *selfp) { // calculates neural network result given layer 1 n
     }
     *selfp = self;
 }
-int loadTrainingInstance(class *selfp, int instance) { // loads an instance of the training data to the network
+int loadTrainingInstance(class *selfp, int instance) { // loads an instance of the training data to the nerwork
     class self = *selfp;
     if (instance >= self.data -> length) {
         printf("No Sample %d\n", instance);
         return -1;
     }
-    if (((list_t*) (self.data -> data[instance].p)) -> length - 1 > ((list_t*) (self.nodes -> data[0].p)) -> length) {
+    if (((list_t*) (self.data -> data[instance].p)) -> length - 1 > self.nodesPerLayer -> data[0].i) {
         printf("Error: not enough layer 1 nodes\n");
         return -1;
     }
-    for (int i = 0; i < ((list_t*) (self.data -> data[instance].p)) -> length; i++) {
-        ((list_t*) (self.nodes -> data[0].p)) -> data[((i - 1) % 28) * 28 + ((i - 1) / 28)] = (unitype) (((double) ((list_t*) (self.data -> data[instance].p)) -> data[i].i) / 255);
+    for (int i = 0; i < ((list_t*) (self.data -> data[instance].p)) -> length - 1; i++) {
+        ((list_t*) (self.nodes -> data[0].p)) -> data[(i % self.format -> data[1].i) * self.format -> data[1].i + (i / self.format -> data[1].i)] = (unitype) (((double) ((list_t*) (self.data -> data[instance].p)) -> data[i + 1].i) / 255);
         /*
         because my renderer goes like
         1  5  9  13
@@ -129,32 +129,39 @@ int setup(class *selfp) { // setup the network using self.layers and self.nodesP
         list_append(self.weights, (unitype) (void*) list_init(), 'r');
         list_append(self.biases, (unitype) (void*) list_init(), 'r');
         for (int j = 0; j < self.nodesPerLayer -> data[i].i; j++) {
-            list_append((list_t*) (self.weights -> data[i].p), (unitype) (void*) list_init(), 'r');
             list_append((list_t*) (self.nodes -> data[i].p), (unitype) (double) 0, 'd');
-            list_append((list_t*) (self.weightedSums -> data[i].p), (unitype) (double) 0, 'd');
-            list_append((list_t*) (self.gradient -> data[i].p), (unitype) (double) 0, 'd');
             if (i > 0) {
+                list_append((list_t*) (self.weights -> data[i].p), (unitype) (void*) list_init(), 'r');
+                list_append((list_t*) (self.weightedSums -> data[i].p), (unitype) (double) 0, 'd');
                 list_append((list_t*) (self.biases -> data[i].p), (unitype) (((double) rand() / RAND_MAX - 0.5) * 2), 'd');
-            }
-            if (i < self.layers - 1) {
-                for (int k = 0; k < self.nodesPerLayer -> data[i + 1].i; k++) {
-                    list_append((list_t*) (self.gradient -> data[i].p), (unitype) (double) 0, 'd');
+                for (int k = 0; k < self.nodesPerLayer -> data[i - 1].i; k++) {
                     list_append((list_t*) (((list_t*) (self.weights -> data[i].p)) -> data[j].p), (unitype) (((double) rand() / RAND_MAX - 0.5) * 2), 'd');
+                    list_append((list_t*) (self.gradient -> data[i].p), (unitype) (double) 0, 'd');
                 }
+                list_append((list_t*) (self.gradient -> data[i].p), (unitype) (double) 0, 'd'); // bias
             }
         }
     }
-    list_pop(self.gradient);
-    list_pop(self.weights);
+    // for (int i = 0; i < self.weights -> length; i++) {
+    //     printf("master: %d [", ((list_t*) (self.weights -> data[i].p)) -> length);
+    //     for (int j = 0; j < ((list_t*) (self.weights -> data[i].p)) -> length; j++) {
+    //         printf("%d, ", ((list_t*) (((list_t*) (self.weights -> data[i].p)) -> data[j].p)) -> length);
+    //     }
+    //     printf("]\n");
+    // }
+    // for (int i = 0; i < self.gradient -> length; i++) {
+    //     printf("%d, ", ((list_t*) (self.gradient -> data[i].p)) -> length);
+    // }
+    // printf("\n");
     *selfp = self;
     return 0;
 }
 void randomiseWeightsAndBiases(class *selfp) {
     class self = *selfp;
     for (int i = 1; i < self.layers; i++) {
-        for (int j = 0; j < ((list_t*) (self.nodes -> data[i].p)) -> length; j++) {
-            for (int k = 0; k < ((list_t*) (self.nodes -> data[i - 1].p)) -> length; k++) {
-                ((list_t*) (((list_t*) (self.weights -> data[i - 1].p)) -> data[k].p)) -> data[j] = (unitype) (((double) rand() / RAND_MAX - 0.5) * 2);
+        for (int j = 0; j < self.nodesPerLayer -> data[i].i; j++) {
+            for (int k = 0; k < self.nodesPerLayer -> data[i - 1].i; k++) {
+                ((list_t*) (((list_t*) (self.weights -> data[i].p)) -> data[j].p)) -> data[k] = (unitype) (((double) rand() / RAND_MAX - 0.5) * 2);
             }
             ((list_t*) (self.biases -> data[i].p)) -> data[j] = (unitype) (((double) rand() / RAND_MAX - 0.5) * 2);
         }
@@ -163,7 +170,7 @@ void randomiseWeightsAndBiases(class *selfp) {
 }
 void clearInp(class *selfp) { // sets all first layer nodes to 0
     class self = *selfp;
-    for (int i = 0; i < ((list_t*) (self.nodes -> data[0].p)) -> length; i++) {
+    for (int i = 0; i < self.nodesPerLayer -> data[0].i; i++) {
         ((list_t*) (self.nodes -> data[0].p)) -> data[i] = (unitype) (double) 0;
     }
     *selfp = self;
@@ -173,31 +180,29 @@ void clearInp(class *selfp) { // sets all first layer nodes to 0
 
 void adjustWeightsAndBiases(class *selfp, double scale) { // adjust weights and biases according to self.gradient
     class self = *selfp;
-    for (int i = 1; i < self.layers; i++) {
-        for (int j = 0; j < ((list_t*) (self.nodes -> data[i].p)) -> length; j++) {
-            for (int k = 0; k < ((list_t*) (self.nodes -> data[i - 1].p)) -> length; k++) {
-                double winit = ((list_t*) (((list_t*) (self.weights -> data[i - 1].p)) -> data[k].p)) -> data[j].d;
-                ((list_t*) (((list_t*) (self.weights -> data[i - 1].p)) -> data[k].p)) -> data[j] = (unitype) (winit - (scale * ((list_t*) (self.gradient -> data[i - 1].p)) -> data[j * (((list_t*) (self.nodes -> data[i - 1].p)) -> length + 1) + k].d));
+    for (int i = 1; i < self.nodes -> length; i++) {
+        int lengthLayer = self.nodesPerLayer -> data[i].i;
+        int lengthPrevLayer = self.nodesPerLayer -> data[i - 1].i;
+        for (int j = 0; j < lengthLayer; j++) {
+            for (int k = 0; k < lengthPrevLayer; k++) {
+                double winit = ((list_t*) (((list_t*) (self.weights -> data[i].p)) -> data[j].p)) -> data[k].d;
+                ((list_t*) (((list_t*) (self.weights -> data[i].p)) -> data[j].p)) -> data[k] = (unitype) (winit - (scale * ((list_t*) (self.gradient -> data[i].p)) -> data[j * (lengthPrevLayer + 1) + k].d));
             }
             double binit = ((list_t*) (self.biases -> data[i].p)) -> data[j].d;
-            ((list_t*) (self.biases -> data[i].p)) -> data[j] = (unitype) (binit - (scale * ((list_t*) (self.gradient -> data[i - 1].p)) -> data[(j + 1) * (((list_t*) (self.nodes -> data[i - 1].p)) -> length + 1) - 1].d));
-            // printf("double: %.17lf, ", (scale * ((double) 1 / self.data -> length) * ((list_t*) (self.gradient -> data[i - 1].p)) -> data[(j + 1) * (((list_t*) (self.nodes -> data[i - 1].p)) -> length + 1) - 1].d));
-            // printf("index: %d, ", (j + 1) * (((list_t*) (self.nodes -> data[i - 1].p)) -> length + 1) - 1);
-            // printf("gradient: %.17lf\n", ((list_t*) (self.gradient -> data[i - 1].p)) -> data[(j + 1) * (((list_t*) (self.nodes -> data[i - 1].p)) -> length + 1) - 1].d);
+            ((list_t*) (self.biases -> data[i].p)) -> data[j] = (unitype) (binit - (scale * ((list_t*) (self.gradient -> data[i].p)) -> data[(j + 1) * (lengthPrevLayer + 1) - 1].d));
         }
     }
     *selfp = self;
 }
 double calculateCost(class *selfp) { // calculates cost of current loaded data relative to presumed correct response (self.pres)
     class self = *selfp;
-    if ((((list_t*) (self.nodes -> data[self.layers - 1].p)) -> length) != (self.pres -> length)) {
+    if ((((list_t*) (self.nodes -> data[self.nodes -> length - 1].p)) -> length) != (self.pres -> length)) {
         return -1;
     }
     double acc = 0;
-    for (int i = 0; i < (((list_t*) (self.nodes -> data[self.layers - 1].p)) -> length); i++) {
-        acc += ((((list_t*) (self.nodes -> data[self.layers - 1].p)) -> data[i].d - self.pres -> data[i].d) * (((list_t*) (self.nodes -> data[self.layers - 1].p)) -> data[i].d - self.pres -> data[i].d));
+    for (int i = 0; i < (((list_t*) (self.nodes -> data[self.nodes -> length - 1].p)) -> length); i++) {
+        acc += ((((list_t*) (self.nodes -> data[self.nodes -> length - 1].p)) -> data[i].d - self.pres -> data[i].d) * (((list_t*) (self.nodes -> data[self.nodes -> length - 1].p)) -> data[i].d - self.pres -> data[i].d));
     }
-    *selfp = self;
     return acc;
 }
 double calculateTotalCost(class *selfp) {
@@ -210,36 +215,38 @@ double calculateTotalCost(class *selfp) {
     *selfp = self;
     return acc;
 }
-void backProp(class *selfp) { // one iteration of backpropgation, sets the self.gradient list
+void backProp(class *selfp) { // one iteration of backpropagation, sets the self.gradient list
     class self = *selfp;
     list_t *lastLayer = list_init(); // 1D list containing all of the derivatives of a particular layer (the last refers to the last computation which moves from the last layer in the network to the first as we backpropagate)
-    for (int i = 0; i < ((list_t*) (self.nodes -> data[self.layers - 1].p)) -> length; i++) { // load derivatives of the output layer
-        list_append(lastLayer, (unitype) (2 * (((list_t*) (self.nodes -> data[self.layers - 1].p)) -> data[i].d - self.pres -> data[i].d)), 'd');
+    for (int i = 0; i < ((list_t*) (self.nodes -> data[self.nodes -> length - 1].p)) -> length; i++) { // load derivatives of the output layer
+        list_append(lastLayer, (unitype) (2 * (((list_t*) (self.nodes -> data[self.nodes -> length - 1].p)) -> data[i].d - self.pres -> data[i].d)), 'd');
     }
     for (int i = self.layers - 1; i > 0; i--) { // do layers - 1 cycles, starting at layers - 1 and ending at 1
-        int lengthNode = ((list_t*) (self.nodes -> data[i - 1].p)) -> length;
-        for (int j = 0; j < ((list_t*) (self.nodes -> data[i].p)) -> length; j++) {
+        int lengthLayer = self.nodesPerLayer -> data[i].i;
+        int lengthPrevLayer = self.nodesPerLayer -> data[i - 1].i;
+        for (int j = 0; j < lengthLayer; j++) {
             double derivActivate = DERIV_ACTIVATION_FUNCTION(((list_t*) (self.weightedSums -> data[i].p)) -> data[j].d);
             double lastLayerJ = lastLayer -> data[j].d;
-            for (int k = 0; k < lengthNode; k++) {
-                ((list_t*) (self.gradient -> data[i - 1].p)) -> data[j * (lengthNode + 1) + k] = (unitype) (((list_t*) (self.nodes -> data[i - 1].p)) -> data[k].d * derivActivate * lastLayerJ); // set weight
+            for (int k = 0; k < lengthPrevLayer; k++) {
+                ((list_t*) (self.gradient -> data[i].p)) -> data[j * (lengthPrevLayer + 1) + k] = (unitype) (((list_t*) (self.nodes -> data[i - 1].p)) -> data[k].d * derivActivate * lastLayerJ); // set weight
             }
-            ((list_t*) (self.gradient -> data[i - 1].p)) -> data[(j + 1) * (lengthNode + 1) - 1] = (unitype) (1 * derivActivate * lastLayerJ); // set bias
+            ((list_t*) (self.gradient -> data[i].p)) -> data[(j + 1) * (lengthPrevLayer + 1) - 1] = (unitype) (1 * derivActivate * lastLayerJ); // set bias
         
-            // gradient and weight lists have lengths of layers - 1, reflecting how there are more layers of nodes than layers of weights. The bias list index matches that of the nodes, but index 0 of the bias list is empty
-            // self.weight[i - 1][k][j] represents self.gradient[i - 1][j * (len(self.nodes[i - 1]) + 1) + k], which is a connection from self.nodes[i - 1][k] to self.nodes[i][j]
-
+            // the weights and biases lists 0th index is empty, reflecting how there are more layers of nodes than layers of weights and biases.
+            // self.weight[i][j][k] is encoded to self.gradient[i][j * (self.nodesPerLayer[i - 1] + 1) + k], which is a connection from self.nodes[i - 1][j] to self.nodes[i][k]
+            // self.bias[i][j] is encoded to self.gradient[i][(j + 1) * (self.nodesPerLayer[i - 1] + 1) - 1], which is the bias for self.node[i][j]
         }
         if (i != 1) {
             list_t *lastLayer2 = list_init();
             list_copy(lastLayer, lastLayer2); // create copy of lastLayer to change weights
             list_clear(lastLayer); // setup lastLayer for next backprop iteration (only happens layers - 2 times)
-            for (int j = 0; j < lengthNode; j++) {
+            for (int j = 0; j < lengthLayer; j++) {
+                list_append(lastLayer, (unitype) 0, 'd');
                 double acc = 0;
-                for (int k = 0; k < ((list_t*) (self.nodes -> data[i].p)) -> length; k++) {
-                    acc += ((list_t*) (((list_t*) (self.weights -> data[i - 1].p)) -> data[j].p)) -> data[k].d * DERIV_ACTIVATION_FUNCTION(((list_t*) (self.weightedSums -> data[i].p)) -> data[k].d) * lastLayer2 -> data[k].d;
+                for (int k = 0; k < lengthPrevLayer; k++) {
+                    acc += ((list_t*) (((list_t*) (self.weights -> data[i].p)) -> data[j].p)) -> data[k].d * DERIV_ACTIVATION_FUNCTION(((list_t*) (self.weightedSums -> data[i].p)) -> data[j].d) * lastLayer2 -> data[j].d;
                 }
-                list_append(lastLayer, (unitype) acc, 'd');
+                lastLayer -> data[j] = (unitype) acc;
             }
             list_free(lastLayer2);
         }
@@ -252,7 +259,7 @@ void backProp(class *selfp) { // one iteration of backpropgation, sets the self.
 
 void transform(class *selfp, int factor) {
     class self = *selfp;
-    int len = ((list_t*) (self.nodes -> data[0].p)) -> length;
+    int len = self.nodesPerLayer -> data[0].i;
     if (factor > 0) {
         for (int i = 0; i < len; i++) { // go forward
             if (i + factor < len) {
@@ -283,9 +290,9 @@ void drawNetwork(class *selfp, char nodeValues, char wires) { // renders the net
     double totalXlen = 0;
     for (int i = 0; i < self.layers; i++) {
         if (self.format -> length < (i + 2)) {
-            list_append(self.format, (unitype) (int) (((list_t*) (self.nodes -> data[i].p)) -> length), 'i');
+            list_append(self.format, (unitype) (int) (self.nodesPerLayer -> data[i].i), 'i');
         }
-        totalXlen += ((((list_t*) (self.nodes -> data[i].p)) -> length) / self.format -> data[i + 1].i) * size * 1.1;
+        totalXlen += ((self.nodesPerLayer -> data[i].i) / self.format -> data[i + 1].i) * size * 1.1;
         totalXlen += size * 2;
     }
     double x = -totalXlen / 2 * 0.5;
@@ -294,17 +301,16 @@ void drawNetwork(class *selfp, char nodeValues, char wires) { // renders the net
     for (int i = 0; i < self.layers; i++) {
         list_append(initPositions, (unitype) x, 'd');
         list_append(initPositions, (unitype) (size * 0.275 * (self.format -> data[i + 1].i - 1)), 'd');
-        x += (size * 0.55 * (((((list_t*) (self.nodes -> data[i].p)) -> length) / self.format -> data[i + 1].i) - 1)) + size * 2;
+        x += (size * 0.55 * (((self.nodesPerLayer -> data[i].i) / self.format -> data[i + 1].i) - 1)) + size * 2;
         if (initPositions -> data[initPositions -> length - 1].d > maxY) {
             maxY = initPositions -> data[initPositions -> length - 1].d;
         }
     }
     if (wires) {
         turtlePenSize(1);
-        for (int i = 0; i < self.layers - 1; i++) {
-            for (int j = 0; j < ((list_t*) (self.nodes -> data[i].p)) -> length; j++) {
-                for (int k = 0; k < ((list_t*) (((list_t*) (self.weights -> data[i].p)) -> data[j].p)) -> length; k++) {
-                    // double val = (((list_t*) (((list_t*) (self.weights -> data[i].p)) -> data[j].p)) -> data[k].d);
+        for (int i = 1; i < self.layers; i++) {
+            for (int j = 0; j < self.nodesPerLayer -> data[i].i; j++) {
+                for (int k = 0; k < self.nodesPerLayer -> data[i - 1].i; k++) {
                     double sig = (1 / (1 + exp(fabs(((list_t*) (((list_t*) (self.weights -> data[i].p)) -> data[j].p)) -> data[k].d))));
                     int col = (int) (255 - abs(255 - round(fmod(sig * 255, 255)) - 127.5) * 2); // this is good programming
                     if ((1 - sig > self.wireThresh && self.wireThresh > 0) || (1 - sig < -self.wireThresh && self.wireThresh < 0)) {
@@ -313,19 +319,17 @@ void drawNetwork(class *selfp, char nodeValues, char wires) { // renders the net
                         } else {
                             turtlePenColor(255 - col, 255 - col, 255 - col);
                         }
-                        turtleGoto(initPositions -> data[i * 2].d + size * 0.55 * (j / (self.format -> data[i + 1].i)), initPositions -> data[i * 2 + 1].d - size * 0.55 * (j % (self.format -> data[i + 1].i)));
+                        turtleGoto(initPositions -> data[i * 2 - 2].d + size * 0.55 * (k / (self.format -> data[i].i)), initPositions -> data[i * 2 - 1].d - size * 0.55 * (k % (self.format -> data[i].i)));
                         turtlePenDown();
-                        turtleGoto(initPositions -> data[i * 2 + 2].d + size * 0.55 * (k / (self.format -> data[i + 2].i)), initPositions -> data[i * 2 + 3].d - size * 0.55 * (k % (self.format -> data[i + 2].i)));
+                        turtleGoto(initPositions -> data[i * 2].d + size * 0.55 * (j / (self.format -> data[i + 1].i)), initPositions -> data[i * 2 + 1].d - size * 0.55 * (j % (self.format -> data[i + 1].i)));
                         turtlePenUp();
                     }
-                    // if (sig > 0.49)
-                    //     printf("val: %lf, sig: %lf, col: %d\n", val, sig, col);
                 }
             }
         }
     }
     for (int i = 0; i < self.layers; i++) {
-        for (int j = 0; j < ((list_t*) (self.nodes -> data[i].p)) -> length; j++) {
+        for (int j = 0; j < self.nodesPerLayer -> data[i].i; j++) {
             x = initPositions -> data[i * 2].d + size * 0.55 * (j / (self.format -> data[i + 1].i));
             y = initPositions -> data[i * 2 + 1].d - size * 0.55 * (j % (self.format -> data[i + 1].i));
             turtleGoto(x, y);
@@ -355,10 +359,10 @@ int saveWeightsAndBiases(class *selfp, const char *filename) {
     }
     fprintf(newFile, "\nWeights: \n");
     for (int i = 1; i < self.layers; i++) {
-        for (int j = 0; j < ((list_t*) (self.nodes -> data[i].p)) -> length; j++) {
-            for (int k = 0; k < ((list_t*) (self.nodes -> data[i - 1].p)) -> length; k++) {
+        for (int j = 0; j < self.nodesPerLayer -> data[i].i; j++) {
+            for (int k = 0; k < self.nodesPerLayer -> data[i - 1].i; k++) {
                 char toWrite[50];
-                sprintf(toWrite, "%lf", ((list_t*) (((list_t*) (self.weights -> data[i - 1].p)) -> data[k].p)) -> data[j].d);
+                sprintf(toWrite, "%lf", ((list_t*) (((list_t*) (self.weights -> data[i].p)) -> data[j].p)) -> data[k].d);
                 fprintf(newFile, "%s ", toWrite);
             }
             fprintf(newFile, "\n");
@@ -367,7 +371,7 @@ int saveWeightsAndBiases(class *selfp, const char *filename) {
     }
     fprintf(newFile, "Biases: \n");
     for (int i = 1; i < self.layers; i++) {
-        for (int j = 0; j < ((list_t*) (self.nodes -> data[i].p)) -> length; j++) {
+        for (int j = 0; j < self.nodesPerLayer -> data[i].i; j++) {
             char toWrite[50];
             sprintf(toWrite, "%lf", ((list_t*) (self.biases -> data[i].p)) -> data[j].d);
             fprintf(newFile, "%s ", toWrite);
@@ -407,10 +411,10 @@ int saveDataset(class *selfp, const char *filename) {
     fprintf(newFile, "%d,", toWrite);
     list_append(self.data, (unitype) (void*) list_init(), 'r');
     list_append((list_t*) (self.data -> data[self.data -> length - 1].p), (unitype) toWrite, 'i');
-    for (int i = 0; i < ((list_t*) (self.nodes -> data[0].p)) -> length; i++) { // write node layer 1 data to file
-        toWrite = (int) round(((list_t*) (self.nodes -> data[0].p)) -> data[(i % 28) * 28 + (i / 28)].d * 255); // translate mod and division
+    for (int i = 0; i < self.nodesPerLayer -> data[0].i; i++) { // write node layer 1 data to file
+        toWrite = (int) round(((list_t*) (self.nodes -> data[0].p)) -> data[(i % self.format -> data[1].i) * self.format -> data[1].i + (i / self.format -> data[1].i)].d * 255); // translate mod and division
         list_append((list_t*) (self.data -> data[self.data -> length - 1].p), (unitype) toWrite, 'i'); // add value to data (for immediate use)
-        if (i + 1 != ((list_t*) (self.nodes -> data[0].p)) -> length) {
+        if (i + 1 != self.nodesPerLayer -> data[0].i) {
             fprintf(newFile, "%d,", toWrite);
         } else {
             fprintf(newFile, "%d", toWrite);
@@ -452,20 +456,23 @@ int loadWeightsAndBiases(class *selfp, const char *filename) { // loads weights 
     printf(" nodes per layer\n");
     setup(&self);
     for (int i = 1; i < self.layers; i++) {
-        for (int j = 0; j < ((list_t*) (self.nodes -> data[i].p)) -> length; j++) {
-            for (int k = 0; k < ((list_t*) (self.nodes -> data[i - 1].p)) -> length; k++) {
+        for (int j = 0; j < self.nodesPerLayer -> data[i].i; j++) {
+            for (int k = 0; k < self.nodesPerLayer -> data[i - 1].i; k++) {
                 checksum = fscanf(self.saveFile, "%s", throw);
                 sscanf(throw, "%lf", &doub);
-                ((list_t*) (((list_t*) (self.weights -> data[i - 1].p)) -> data[k].p)) -> data[j] = (unitype) doub;
+                ((list_t*) (((list_t*) (self.weights -> data[i].p)) -> data[j].p)) -> data[k] = (unitype) doub;
             }
         }
     }
     fscanf(self.saveFile, "%s", throw);
     if (strcmp(throw, "Biases:") == 0) {
         // printf("loaded weights!\n"); // enable to debug problems in weights or bias categories
+    } else {
+        printf("Error reading file\n");
+        return -1;
     }
     for (int i = 1; i < self.layers; i++) {
-        for (int j = 0; j < ((list_t*) (self.nodes -> data[i].p)) -> length; j++) {
+        for (int j = 0; j < self.nodesPerLayer -> data[i].i; j++) {
             checksum = fscanf(self.saveFile, "%s", throw);
             sscanf(throw, "%lf", &doub);
             ((list_t*) (self.biases -> data[i].p)) -> data[j] = (unitype) doub;
@@ -576,7 +583,7 @@ int main(int argc, char *argv[]) {
     if (allSet == 0) {
         /* configure layers and nodes per layer */
         obj.layers = 4; // set layers
-        list_append(obj.nodesPerLayer, (unitype) (28 * 28), 'i'); // set nodes per layer
+        list_append(obj.nodesPerLayer, (unitype) 784, 'i'); // set nodes per layer
         list_append(obj.nodesPerLayer, (unitype) 16, 'i');
         list_append(obj.nodesPerLayer, (unitype) 16, 'i');
         list_append(obj.nodesPerLayer, (unitype) 10, 'i');
@@ -704,6 +711,7 @@ int main(int argc, char *argv[]) {
                     saveDataset(&obj, dataset);
                     printf("saved data to %s\n", dataset);
                 }
+                loadTrainingInstance(&obj, obj.data -> length - 1);
             }
         } else {
             keys[6] = 0;
@@ -844,7 +852,7 @@ int main(int argc, char *argv[]) {
         }
         if (turtleKeyPressed(GLFW_KEY_LEFT)) { // transform (left)
             if (keys[14] == 0) {
-                transform(&obj, 28);
+                transform(&obj, obj.format -> data[1].i);
                 process(&obj);
                 drawNetwork(&obj, 0, wireRender);
             }
@@ -856,7 +864,7 @@ int main(int argc, char *argv[]) {
         }
         if (turtleKeyPressed(GLFW_KEY_RIGHT)) { // transform (right)
             if (keys[15] == 0) {
-                transform(&obj, -28);
+                transform(&obj, -obj.format -> data[1].i);
                 process(&obj);
                 drawNetwork(&obj, 0, wireRender);
             }
@@ -878,8 +886,8 @@ int main(int argc, char *argv[]) {
             }
             int count = 0;
             for (int i = 0; i < ((list_t*) (obj.nodes -> data[0].p)) -> length; i++) {
-                double diffX = (i / 28 * 12) - centerX;
-                double diffY = ((27 - (i % 28)) * 12) - centerY;
+                double diffX = (i / obj.format -> data[1].i * 12) - centerX;
+                double diffY = ((27 - (i % obj.format -> data[1].i)) * 12) - centerY;
                 if (diffX * diffX + diffY * diffY <= stylesize * stylesize * 144) {
                     all[count] = i;
                     double sig = -(stylesize * stylesize * 144 - (diffX * diffX + diffY * diffY)) / (stylesize * stylesize * 144);
@@ -887,7 +895,7 @@ int main(int argc, char *argv[]) {
                     count++;
                 }
             }
-            for (int i = 0; i < ceil(16 * stylesize * stylesize); i++) {
+            for (int i = 0; i < count; i++) {
                 if (all[i] != -1 && ((list_t*) (obj.nodes -> data[0].p)) -> data[all[i]].d < value[i]) {
                     ((list_t*) (obj.nodes -> data[0].p)) -> data[all[i]] = (unitype) value[i];
                 }
