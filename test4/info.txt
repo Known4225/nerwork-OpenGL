@@ -1,0 +1,7 @@
+trained using mnist_train (60000 samples)
+
+mnist test results:
+start4: 
+lowerMid4: 
+mid4: 
+upperMid4: 
