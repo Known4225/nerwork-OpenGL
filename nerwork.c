@@ -173,7 +173,7 @@ void clearInp(class *selfp) { // sets all first layer nodes to 0
 
 void adjustWeightsAndBiases(class *selfp, double scale) { // adjust weights and biases according to self.gradient
     class self = *selfp;
-    for (int i = 1; i < self.nodes -> length; i++) {
+    for (int i = 1; i < self.layers; i++) {
         for (int j = 0; j < ((list_t*) (self.nodes -> data[i].p)) -> length; j++) {
             for (int k = 0; k < ((list_t*) (self.nodes -> data[i - 1].p)) -> length; k++) {
                 double winit = ((list_t*) (((list_t*) (self.weights -> data[i - 1].p)) -> data[k].p)) -> data[j].d;
@@ -190,12 +190,12 @@ void adjustWeightsAndBiases(class *selfp, double scale) { // adjust weights and 
 }
 double calculateCost(class *selfp) { // calculates cost of current loaded data relative to presumed correct response (self.pres)
     class self = *selfp;
-    if ((((list_t*) (self.nodes -> data[self.nodes -> length - 1].p)) -> length) != (self.pres -> length)) {
+    if ((((list_t*) (self.nodes -> data[self.layers - 1].p)) -> length) != (self.pres -> length)) {
         return -1;
     }
     double acc = 0;
-    for (int i = 0; i < (((list_t*) (self.nodes -> data[self.nodes -> length - 1].p)) -> length); i++) {
-        acc += ((((list_t*) (self.nodes -> data[self.nodes -> length - 1].p)) -> data[i].d - self.pres -> data[i].d) * (((list_t*) (self.nodes -> data[self.nodes -> length - 1].p)) -> data[i].d - self.pres -> data[i].d));
+    for (int i = 0; i < (((list_t*) (self.nodes -> data[self.layers - 1].p)) -> length); i++) {
+        acc += ((((list_t*) (self.nodes -> data[self.layers - 1].p)) -> data[i].d - self.pres -> data[i].d) * (((list_t*) (self.nodes -> data[self.layers - 1].p)) -> data[i].d - self.pres -> data[i].d));
     }
     *selfp = self;
     return acc;
@@ -213,8 +213,8 @@ double calculateTotalCost(class *selfp) {
 void backProp(class *selfp) { // one iteration of backpropgation, sets the self.gradient list
     class self = *selfp;
     list_t *lastLayer = list_init(); // 1D list containing all of the derivatives of a particular layer (the last refers to the last computation which moves from the last layer in the network to the first as we backpropagate)
-    for (int i = 0; i < ((list_t*) (self.nodes -> data[self.nodes -> length - 1].p)) -> length; i++) { // load derivatives of the output layer
-        list_append(lastLayer, (unitype) (2 * (((list_t*) (self.nodes -> data[self.nodes -> length - 1].p)) -> data[i].d - self.pres -> data[i].d)), 'd');
+    for (int i = 0; i < ((list_t*) (self.nodes -> data[self.layers - 1].p)) -> length; i++) { // load derivatives of the output layer
+        list_append(lastLayer, (unitype) (2 * (((list_t*) (self.nodes -> data[self.layers - 1].p)) -> data[i].d - self.pres -> data[i].d)), 'd');
     }
     for (int i = self.layers - 1; i > 0; i--) { // do layers - 1 cycles, starting at layers - 1 and ending at 1
         int lengthNode = ((list_t*) (self.nodes -> data[i - 1].p)) -> length;

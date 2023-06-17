@@ -1,7 +1,0 @@
-trained using mnist_test (10000 samples)
-
-mnist test results:
-start3: 
-lowerMid3: 
-mid3: 
-upperMid3: 
