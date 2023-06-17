@@ -241,12 +241,11 @@ void backProp(class *selfp) { // one iteration of backpropagation, sets the self
             list_copy(lastLayer, lastLayer2); // create copy of lastLayer to change weights
             list_clear(lastLayer); // setup lastLayer for next backprop iteration (only happens layers - 2 times)
             for (int j = 0; j < lengthLayer; j++) {
-                list_append(lastLayer, (unitype) 0, 'd');
                 double acc = 0;
                 for (int k = 0; k < lengthPrevLayer; k++) {
-                    acc += ((list_t*) (((list_t*) (self.weights -> data[i].p)) -> data[j].p)) -> data[k].d * DERIV_ACTIVATION_FUNCTION(((list_t*) (self.weightedSums -> data[i].p)) -> data[j].d) * lastLayer2 -> data[j].d;
+                    acc += ((list_t*) (((list_t*) (self.weights -> data[i].p)) -> data[j].p)) -> data[k].d * DERIV_ACTIVATION_FUNCTION(((list_t*) (self.weightedSums -> data[i].p)) -> data[j].d) * lastLayer2 -> data[k].d;
                 }
-                lastLayer -> data[j] = (unitype) acc;
+                list_append(lastLayer, (unitype) acc, 'd');
             }
             list_free(lastLayer2);
         }
