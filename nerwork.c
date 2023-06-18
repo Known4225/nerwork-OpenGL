@@ -268,6 +268,40 @@ void transform(class *selfp, int factor) {
     }
     *selfp = self;
 }
+void normaliseSample(class *selfp) { // centers the sample on the canvas
+    class self = *selfp;
+    double fullSum = 0;
+    for (int i = 0; i < self.nodesPerLayer -> data[0].i; i++) {
+        fullSum += ((list_t*) (self.nodes -> data[0].p)) -> data[i].d;
+    }
+    int rows = self.format -> data[1].i;
+    int columns = self.nodesPerLayer -> data[0].i / rows;
+    double expValueX = 0;
+    int iter = 0;
+    for (int i = 0; i < columns; i++) {
+        double sumColumn = 0;
+        for (int j = 0; j < rows; j++) {
+            sumColumn += ((list_t*) (self.nodes -> data[0].p)) -> data[iter].d;
+            iter += 1;
+        }
+        sumColumn /= fullSum;
+        expValueX += sumColumn * ((i + 0.5) - columns / 2);
+    }
+    double expValueY = 0;
+    for (int i = 0; i < rows; i++) {
+        iter = i;
+        double sumRow = 0;
+        for (int j = 0; j < columns; j++) {
+            sumRow += ((list_t*) (self.nodes -> data[0].p)) -> data[iter].d;
+            iter += rows;
+        }
+        sumRow /= fullSum;
+        expValueY += sumRow * ((i + 0.5) - columns / 2);
+    }
+    transform(&self, (int) round(expValueX) * 28);
+    transform(&self, (int) round(expValueY));
+    *selfp = self;
+}
 void drawNetwork(class *selfp, char nodeValues, char wires) { // renders the network
     class self = *selfp;
     turtleClear();
@@ -862,6 +896,16 @@ int main(int argc, char *argv[]) {
                 keys[15] = 0;
         } else {
             keys[15] = 0;
+        }
+        if (turtleKeyPressed(GLFW_KEY_N)) { // normalise (center) sample
+            if (keys[16] == 0) {
+                keys[16] = 1;
+                normaliseSample(&obj);
+                process(&obj);
+                drawNetwork(&obj, 0, wireRender);
+            }
+        } else {
+            keys[16] = 0;
         }
         if (turtleMouseDown()) { // draw your own sample data
             turtleGetMouseCoords(); // get the mouse coordinates (turtools.mouseX, turtools.mouseY)
