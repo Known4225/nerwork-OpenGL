@@ -331,6 +331,7 @@ void drawNetwork(class *selfp, char nodeValues, char wires) { // renders the net
     }
     if (wires) {
         turtlePenSize(1);
+        turtlePenShape("none");
         for (int i = 1; i < self.layers; i++) {
             for (int j = 0; j < self.nodesPerLayer -> data[i].i; j++) {
                 for (int k = 0; k < self.nodesPerLayer -> data[i - 1].i; k++) {
@@ -351,6 +352,7 @@ void drawNetwork(class *selfp, char nodeValues, char wires) { // renders the net
             }
         }
     }
+    turtlePenShape("circle");
     for (int i = 0; i < self.layers; i++) {
         for (int j = 0; j < self.nodesPerLayer -> data[i].i; j++) {
             x = initPositions -> data[i * 2].d + size * 0.55 * (j / (self.format -> data[i + 1].i));
