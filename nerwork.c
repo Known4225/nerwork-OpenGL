@@ -54,7 +54,7 @@ void nerworkInit(class *selfp) { // initialise values
     *selfp = self;
 }
 
-#define ACTIVATION_FUNCTION(inp) (1 / (1 + exp(-inp))) // activation function macro (sigmoid)
+#define ACTIVATION_FUNCTION(inp) (1 / (1 + exp(-(inp)))) // activation function macro (sigmoid)
 #define DERIV_ACTIVATION_FUNCTION(inp) (ACTIVATION_FUNCTION(inp) * (1 - ACTIVATION_FUNCTION(inp))) // derivative of activation function (specific sigmoid derivative)
 
 void process(class *selfp) { // calculates neural network result given layer 1 nodes have been set
