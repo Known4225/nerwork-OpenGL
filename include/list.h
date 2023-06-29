@@ -140,43 +140,9 @@ void list_print(list_t*);
 
 void list_append(list_t *list, unitype data, char type) { // append to list, must specify type
     if (list -> realLength  <= list -> length) {
-        if (list -> length > 120000) { // heap allocate if the list is too big (avoid stack overflow, windows has a stack size of 1m bytes and 125000 8 byte unitypes fill the entire space)
-            char *tempType = malloc(list -> length);
-            unitype *tempData = malloc(list -> length * sizeof(unitype));
-            for (int i = 0; i < list -> length; i++) {
-                tempType[i] = list -> type[i];
-                tempData[i] = list -> data[i];
-            }
-            list -> realLength *= 2;
-            list -> realLength += 1;
-            free(list -> type);
-            free(list -> data);
-            list -> type = calloc(list -> realLength, sizeof(int));
-            list -> data = calloc(list -> realLength, sizeof(unitype));
-            for (int i = 0; i < list -> length; i++) {
-                list -> type[i] = tempType[i];
-                list -> data[i] = tempData[i];
-            }
-            free(tempType);
-            free(tempData);
-        } else {
-            char tempType[list -> length];
-            unitype tempData[list -> length];
-            for (int i = 0; i < list -> length; i++) {
-                tempType[i] = list -> type[i];
-                tempData[i] = list -> data[i];
-            }
-            list -> realLength *= 2;
-            list -> realLength += 1;
-            free(list -> type);
-            free(list -> data);
-            list -> type = calloc(list -> realLength, sizeof(int));
-            list -> data = calloc(list -> realLength, sizeof(unitype));
-            for (int i = 0; i < list -> length; i++) {
-                list -> type[i] = tempType[i];
-                list -> data[i] = tempData[i];
-            }
-        }
+        list -> realLength *= 2;
+        list -> type = realloc(list -> type, list -> realLength);
+        list -> data = realloc(list -> data, list -> realLength * sizeof(unitype));
     }
     list -> type[list -> length] = type;
     if (type == 's') {
@@ -196,11 +162,7 @@ void list_clear(list_t *list) {
 }
 
 unitype list_pop(list_t *list) { // pops the last item of the list off and returns it
-    if (list -> length <= 0) {
-        list_free(list);
-        list_init(list);
-        return (unitype) 0;
-    } else {
+    if (list -> length > 0) {
         list -> length -= 1;
         unitype ret = list -> data[list -> length];
         if (list -> type[list -> length] == 'r') {
@@ -211,7 +173,14 @@ unitype list_pop(list_t *list) { // pops the last item of the list off and retur
         }
         list -> type[list -> length] = (char) 0;
         list -> data[list -> length] = (unitype) 0;
+        if (list -> length <= list -> realLength / 2 && list -> realLength > 1) {
+            list -> realLength /= 2;
+            list -> type = realloc(list -> type, list -> realLength);
+            list -> data = realloc(list -> data, list -> realLength * sizeof(unitype));
+        }
         return ret;
+    } else {
+        return (unitype) 0;
     }
 }
 
@@ -220,7 +189,7 @@ unitype list_delete(list_t *list, int index) { // deletes the item at list[index
     index %= list -> length;
     unitype ret = list -> data[index];
     if (list -> type[index] == 'r') {
-            list_free(list -> data[index].p);
+        list_free(list -> data[index].p);
     }
     if (list -> type[index] == 's' || list -> type[index] == 'p') {
         free(list -> data[index].p);
@@ -232,6 +201,11 @@ unitype list_delete(list_t *list, int index) { // deletes the item at list[index
     list -> length -= 1;
     list -> type[list -> length] = (char) 0;
     list -> data[list -> length] = (unitype) 0;
+    if (list -> length <= list -> realLength / 2 && list -> realLength > 1) {
+        list -> realLength /= 2;
+        list -> type = realloc(list -> type, list -> realLength);
+        list -> data = realloc(list -> data, list -> realLength * sizeof(unitype));
+    }
     return ret;
 }
 
@@ -301,10 +275,6 @@ int list_count(list_t *list, unitype item, char type) { // counts how many insta
     int count = 0;
     for (int i = 0; i < list -> length; i++) {
         count += unitype_check_equal(list -> data[i], item, list -> type[i], type);
-        if (unitype_check_equal(list -> data[i], item, list -> type[i], type) == 1) {
-            // printf("found at: %d\n", i);
-        }
-        // printf("%d\n", count);
     }
     return count;
 }
@@ -401,7 +371,7 @@ void list_print(list_t *list) { // prints the list (like python would)
     }
 }
 
-void list_print_emb(list_t *list) { // prints the list (like python would)
+void list_print_emb(list_t *list) { // prints the list but without closing \n
     printf("[");
     if (list -> length == 0) {
         printf("]");
@@ -442,7 +412,7 @@ void list_free_lite(list_t *list) {
     free(list -> data);
 }
 
-void list_free(list_t *list) { // frees the data used by the int list
+void list_free(list_t *list) { // frees the data used by the list
     list_free_lite(list);
     free(list);
 }
