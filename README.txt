@@ -59,8 +59,8 @@ You can also change the activation function which is currently the logistic func
 There is currently no support for multiple activation/transfer functions, but I'll probably get around to it.
 
 Linux:
-you'll need to install glad and glfw and compile the libraries.
-once you've obtained the libglad.a and libglfw3.a files, 
-put them in a folder called "Linux" and use
-
 gcc nerwork.c -L./Linux -lglfw3 -ldl -lm -lX11 -lglad -lGL -lGLU -lpthread -O3 -o nerwork.o
+
+if it doesn't work you'll probably need to install glad and glfw and compile the libraries (glad and glfw).
+once you've obtained the libglad.a and libglfw3.a files, 
+replace the ones in the folder called "Linux" and recompile
