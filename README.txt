@@ -11,7 +11,7 @@ optional flags
 -t: supply training data (mnist_test.csv)
 
 (example)
-nerwork.exe -w test4/upperMid4.txt -t mnist_test.csv
+nerwork.exe -w exampleWeightsAndBiases.txt -t mnist_test.csv
 
 keybinds:
 mouse: draw your own samples (click and drag on layer 1 node square (28 * 28))
