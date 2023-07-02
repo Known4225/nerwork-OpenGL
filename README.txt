@@ -1,8 +1,6 @@
 This application is built for windows 64 bit
 
 gcc nerwork.c -L./Windows -lglfw3 -lopengl32 -lgdi32 -O3 -lglad -o nerwork.exe
-gcc nerworkEMNIST.c -L./Windows -lglfw3 -lopengl32 -lgdi32 -O3 -lglad -o nerworkEMNIST.exe
-gcc CSVtransposer.c -L./Windows -lglfw3 -lopengl32 -lgdi32 -O3 -lglad -o CSVtransposer.exe
 
 nerwork.exe
 
