@@ -14,19 +14,19 @@ optional flags
 > nerwork.exe -w exampleWeightsAndBiases.txt -t mnist_test.csv
 
 keybinds:
-mouse: draw your own samples (click and drag on layer 1 node square (28 * 28))
-space: load random sample (from supply training data)
-c: clear layer 1 nodes (for drawing your own)
-t: begin training
-s: save weights and biases to file
-a: save drawn data to dataset file
-l: load sample manually (labelled by number)
-r: randomise weights and biases (reset before training)
-f: calculate cost (for current loaded instance)
-g: calculate average cost
-w: toggle wire render
-q: change wire thresh (visual only, unless doWireCulling is 1)
-arrow keys: transform loaded instance
+- mouse: draw your own samples (click and drag on layer 1 node square (28 * 28))
+- space: load random sample (from supply training data)
+- c: clear layer 1 nodes (for drawing your own)
+- t: begin training
+- s: save weights and biases to file
+- a: save drawn data to dataset file
+- l: load sample manually (labelled by number)
+- r: randomise weights and biases (reset before training)
+- f: calculate cost (for current loaded instance)
+- g: calculate average cost
+- w: toggle wire render
+- q: change wire thresh (visual only, unless doWireCulling is 1)
+- arrow keys: transform loaded instance
 
 instructions:
 to train on existing dataset, run nerwork.exe with -t "yourDataset.csv"
@@ -34,7 +34,7 @@ you can press space to load random samples and ensure that the data was loaded c
 then press t to begin training and confirm in the console
 the nerwork will then train, giving you cost function information every 10000 training iterations (no stochiastic training implemented yet) and average cost function information (across the entire dataset) every 2500000 training iterations (which it will then use to update the rate of training)
 to stop training, hold escape (make sure you are tabbed into the nerwork window) until the console indicates that training has ended
-you can then save the weights and biases to a file by pressing s
+you can then save the weights and biases to a file by pressing `s`
 
 to build your own dataset, run nerwork.exe
 you can then use the mouse to click and drag on the 28x28 canvas to activate the nodes
