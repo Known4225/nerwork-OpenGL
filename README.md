@@ -1,15 +1,17 @@
+# Nerwork
+
 This application is built for windows 64 bit
 
-gcc nerwork.c -L./Windows -lglfw3 -lopengl32 -lgdi32 -O3 -lglad -o nerwork.exe
+> gcc nerwork.c -L./Windows -lglfw3 -lopengl32 -lgdi32 -O3 -lglad -o nerwork.exe
 
-nerwork.exe
+> nerwork.exe
 
 optional flags
 -w: supply weights and biases file (exampleWeightsAndBiases.txt)
 -t: supply training data (mnist_test.csv)
 
 (example)
-nerwork.exe -w exampleWeightsAndBiases.txt -t mnist_test.csv
+> nerwork.exe -w exampleWeightsAndBiases.txt -t mnist_test.csv
 
 keybinds:
 mouse: draw your own samples (click and drag on layer 1 node square (28 * 28))
@@ -62,3 +64,5 @@ gcc nerwork.c -L./Linux -lglfw3 -ldl -lm -lX11 -lglad -lGL -lGLU -lpthread -O3 -
 if it doesn't work you'll probably need to install glad and glfw and compile the libraries (glad and glfw).
 once you've obtained the libglad.a and libglfw3.a files, 
 replace the ones in the folder called "Linux" and recompile
+
+![nerwork](images/nerwork.png)
